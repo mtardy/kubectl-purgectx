@@ -1,7 +1,7 @@
 # kubectl purgectx
 
-kubectl purge context removes the context from a kubeconfig file and its associated
-user and cluster.
+kubectl purge context removes the context and its associated user and cluster
+from a kubeconfig file.
 
 ## Installation
 
