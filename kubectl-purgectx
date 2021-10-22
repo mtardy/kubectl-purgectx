@@ -1,0 +1,43 @@
+#!/usr/bin/env sh
+ 
+set -e
+
+KUBECTL=kubectl
+
+print_available () {
+    echo "\navailable contexts:"
+    $KUBECTL config get-contexts
+}
+
+if [ "$#" -ne 1 ]; then
+    echo "usage: $0 <context-name>"
+    print_available
+    exit 1
+fi
+
+CONTEXT=$1
+
+# colors
+RED='\033[0;31m'
+NC='\033[0m'
+
+# check if context exists
+$KUBECTL config get-contexts $CONTEXT > /dev/null || (print_available && exit 2)
+
+CLUSTER=$($KUBECTL config view -o jsonpath="{.contexts[?(@.name==\"$CONTEXT\")].context.cluster}")
+USER=$($KUBECTL config view -o jsonpath="{.contexts[?(@.name==\"$CONTEXT\")].context.user}")
+
+# ask for delete confirmation
+printf "delete in config context $RED$CONTEXT$NC with associated cluster $RED$CLUSTER$NC and user $RED$USER$NC? (Yy): "
+read -n 1 -r
+echo
+if [[ ! $REPLY =~ ^[Yy]$ ]]
+then
+    echo "cancelled, nothing was modified."
+    exit 3
+fi
+
+# delete the stuff
+$KUBECTL config delete-cluster $CLUSTER
+$KUBECTL config delete-user $USER
+$KUBECTL config delete-context $CONTEXT
